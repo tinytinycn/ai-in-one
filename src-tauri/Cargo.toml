@@ -1,0 +1,22 @@
+[package]
+name = "ai-in-one"
+version = "1.0.0"
+description = "AI IN ONE - 聚合AI助手"
+authors = ["Hart Li"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["unstable"] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2"
+opener = "0"
+
+[features]
+# 默认启用自定义协议 (用于登录状态回传)
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

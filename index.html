@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI IN ONE - 聚合AI助手</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- grid-region: cell header 条在此渲染, 下方空白区由 child webviews 叠加覆盖 -->
+      <div id="grid-region" class="grid-region"></div>
+      <div class="control-panel">
+        <!-- 模型选择区域 -->
+        <div class="selector-row">
+          <div id="model-selector" class="model-selector"></div>
+          <div id="layout-toggle" class="layout-toggle" style="display: none">
+            <button id="layout-btn" class="layout-btn" title="切换布局：平铺/四宫格">📐</button>
+          </div>
+        </div>
+        <!-- 输入区域 -->
+        <div class="input-area">
+          <textarea id="main-input" class="main-input" placeholder="输入问题，按回车发送 (Shift+Enter 换行)..."></textarea>
+          <button id="send-btn" class="send-btn">发送</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
