@@ -2,6 +2,10 @@
 
 基于 Tauri 2.x 的多 AI 助手聚合桌面应用。一次输入，同步发送给多个 AI 模型。
 
+## 软件预览
+
+![AI IN ONE 预览](img/preview.png)
+
 ## 特性
 
 - 聚合 9 个主流 AI 平台（DeepSeek、通义千问、Kimi、豆包、文心一言等）
