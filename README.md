@@ -161,6 +161,14 @@ Win10/11 已内置。若在旧系统运行，需安装 [WebView2 Runtime](https:
 | 依赖 | Chromium 捆绑 | 系统 WebView2 |
 | 启动速度 | 较慢 | 较快 |
 
+## 致谢
+
+本项目基于 [Hart-Li/ai-in-one](https://github.com/Hart-Li/ai-in-one) 项目重构，感谢原作者的贡献。
+
+原项目采用 Electron 架构实现了多 AI 助手聚合功能，本项目在其基础上使用 Tauri 2.x 技术栈进行重构，保留了核心的站点配置与交互逻辑。
+
 ## License
 
-MIT
+Apache License 2.0
+
+本项目继承原项目的 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) 开源协议。
