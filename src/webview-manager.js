@@ -30,6 +30,10 @@ export async function createWebview(site) {
         initScript,
       },
     });
+    // 创建后立即隐藏, 飞入动画期间不显示; 由 layoutWebviews 在动画结束后显示
+    await invoke("layout_webviews", {
+      cells: [{ label: site.label, x: 0, y: 0, w: 0, h: 0, visible: false }],
+    });
   } catch (e) {
     console.error(`[createWebview] ${site.label} failed:`, e);
     createdWebviews.delete(site.label);
@@ -51,13 +55,17 @@ export async function layoutWebviews(activeLabels) {
     const body = cell.querySelector(".cell-body");
     if (!body) return;
     const rect = body.getBoundingClientRect();
+    // 飞入/飞出中的卡片: webview 保持隐藏 (transform 会干扰测量, 且动画期间不应显示)
+    const hidden =
+      cell.classList.contains("card-fly-in") ||
+      cell.classList.contains("card-fly-out");
     cells.push({
       label: cell.dataset.label,
       x: rect.left,
       y: rect.top,
       w: rect.width,
       h: rect.height,
-      visible: true,
+      visible: !hidden,
     });
   });
 
@@ -73,6 +81,19 @@ export async function layoutWebviews(activeLabels) {
     await invoke("layout_webviews", { cells });
   } catch (e) {
     console.error("[layoutWebviews] failed:", e);
+  }
+}
+
+/**
+ * 隐藏单个 child webview (取消勾选飞出时调用, 避免原生窗口孤儿停留)
+ */
+export async function hideWebview(label) {
+  try {
+    await invoke("layout_webviews", {
+      cells: [{ label, x: 0, y: 0, w: 0, h: 0, visible: false }],
+    });
+  } catch (e) {
+    console.error(`[hideWebview] ${label} failed:`, e);
   }
 }
 

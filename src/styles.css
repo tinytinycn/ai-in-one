@@ -17,8 +17,9 @@ html {
 .grid-region {
   flex: 1;
   display: none;
-  gap: 2px;
-  background-color: #ddd;
+  gap: 12px;
+  padding: 12px;
+  background-color: #e8eaed;
   overflow: hidden;
   position: relative;
 }
@@ -51,9 +52,11 @@ html {
 .cell {
   display: flex;
   flex-direction: column;
-  background: white;
+  background: #fff;
   overflow: hidden;
   position: relative;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 .cell-header {
   height: 24px;
@@ -80,6 +83,8 @@ html {
 .grid-region.has-maximized {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
+  padding: 0;
+  gap: 0;
 }
 .grid-region.has-maximized .cell:not(.maximized) {
   display: none !important;
@@ -87,6 +92,38 @@ html {
 .grid-region.has-maximized .cell.maximized {
   grid-column: 1 / -1;
   grid-row: 1 / -1;
+  border-radius: 0;
+}
+
+/* ===== 启动飞入动画 ===== */
+@keyframes cardFlyIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.cell.card-fly-in {
+  animation: cardFlyIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 0.08s);
+}
+
+/* ===== 取消勾选时飞出动画 ===== */
+@keyframes cardFlyOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.96);
+  }
+}
+.cell.card-fly-out {
+  animation: cardFlyOut 0.4s cubic-bezier(0.55, 0, 0.68, 0) forwards;
 }
 
 /* header 按钮 */

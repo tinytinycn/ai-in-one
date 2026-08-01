@@ -8,6 +8,7 @@ import {
   getWebviewUrl,
   openInBrowser,
   onLoginStatus,
+  hideWebview,
 } from "./webview-manager.js";
 
 const grid = document.getElementById("grid-region");
@@ -21,6 +22,7 @@ const layoutBtn = document.getElementById("layout-btn");
 const MAX_SELECTED = 4;
 let activeModels = [];
 let layoutMode = "grid"; // 'grid' = 四宫格, 'row' = 平铺
+let prevActiveModels = []; // 上次激活的模型, 用于计算 added/removed 驱动飞入/飞出
 
 // 默认选中 DeepSeek 与通义千问
 const defaultNames = ["DeepSeek", "通义千问 (Qwen)"];
@@ -119,13 +121,35 @@ function handleCheckboxChange(siteName, isChecked, checkboxEl) {
   updateLayout();
 }
 
-// ===== 布局更新 (异步: 重建 DOM + 创建 webview + 定位) =====
+// ===== 布局更新 (diff: added 飞入 / removed 飞出 / kept 重排) =====
 async function updateLayout() {
-  // 清空 grid
-  grid.innerHTML = "";
-  grid.classList.remove("mode-1", "mode-2", "mode-3", "mode-4", "is-grid", "has-maximized");
-
   const count = activeModels.length;
+  const added = activeModels.filter((n) => !prevActiveModels.includes(n));
+  const removed = prevActiveModels.filter((n) => !activeModels.includes(n));
+  prevActiveModels = [...activeModels];
+
+  // === 移除的卡片: 脱离文档流固定在原位 + 飞出动画 ===
+  removed.forEach((name) => {
+    const site = sites.find((s) => s.name === name);
+    if (!site) return;
+    const cell = grid.querySelector(`.cell[data-label="${site.label}"]`);
+    if (!cell) return;
+    // 脱离流并固定在原位, 让剩余卡片立即重排
+    cell.style.left = `${cell.offsetLeft}px`;
+    cell.style.top = `${cell.offsetTop}px`;
+    cell.style.width = `${cell.offsetWidth}px`;
+    cell.style.height = `${cell.offsetHeight}px`;
+    cell.style.position = "absolute";
+    cell.style.zIndex = "5";
+    // 立即隐藏其 webview (原生窗口不会跟随 CSS transform)
+    hideWebview(site.label);
+    // 触发飞出, 动画结束移除节点
+    cell.classList.add("card-fly-out");
+    cell.addEventListener("animationend", () => cell.remove(), { once: true });
+  });
+
+  // === 更新 grid 模式类 (剩余卡片立即重排到新布局) ===
+  grid.classList.remove("mode-1", "mode-2", "mode-3", "mode-4", "is-grid", "has-maximized");
 
   // 布局切换按钮 (仅 4 个模型时显示)
   if (count === 4) {
@@ -143,21 +167,37 @@ async function updateLayout() {
     }
   }
 
-  // 为每个激活模型创建 cell + 异步创建 webview
+  // === 新增的卡片: 创建并飞入 ===
   const createPromises = [];
-  activeModels.forEach((name) => {
+  added.forEach((name, idx) => {
     const site = sites.find((s) => s.name === name);
     if (!site) return;
     const cell = createCell(site);
+    cell.classList.add("card-fly-in");
+    cell.style.setProperty("--i", idx);
     grid.appendChild(cell);
     createPromises.push(createWebview(site));
   });
 
-  // 等待 webview 创建完成
+  // 等待新 webview 创建完成 (createWebview 会立即将其隐藏)
   await Promise.all(createPromises);
 
-  // 重新定位 (需要 DOM 已渲染, 用 requestAnimationFrame 确保)
+  // 立即重定位: kept 卡片跟随新布局; 飞入/飞出卡片对应 webview 保持隐藏
   requestAnimationFrame(() => relayout());
+
+  // 飞入动画结束后, 移除标记并再次重定位以显示新 webview
+  if (added.length > 0) {
+    const totalWait = 500 + 80 * (added.length - 1) + 100;
+    setTimeout(() => {
+      added.forEach((name) => {
+        const site = sites.find((s) => s.name === name);
+        if (!site) return;
+        const cell = grid.querySelector(`.cell[data-label="${site.label}"]`);
+        if (cell) cell.classList.remove("card-fly-in");
+      });
+      relayout();
+    }, totalWait);
+  }
 }
 
 // ===== 重新定位 child webviews =====
