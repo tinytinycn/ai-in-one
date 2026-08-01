@@ -52,14 +52,33 @@ pub async fn create_webview(app: tauri::AppHandle, args: CreateWebviewArgs) -> R
 /// 重新定位/显示/隐藏所有 child webviews
 #[tauri::command]
 pub async fn layout_webviews(app: tauri::AppHandle, cells: Vec<CellBounds>) -> Result<(), String> {
+    let window = app
+        .get_window("main")
+        .ok_or("main window not found".to_string())?;
+    let scale_factor = window.scale_factor().unwrap_or(1.0);
+    let inner = window.inner_size().unwrap_or_default();
+    eprintln!("[layout] scale_factor={scale_factor}, inner_size={}x{}", inner.width, inner.height);
+
     for cell in cells {
         let Some(webview) = app.get_webview(&cell.label) else {
             continue;
         };
         if cell.visible {
-            let _ = webview.show();
             let _ = webview.set_position(LogicalPosition::new(cell.x, cell.y));
             let _ = webview.set_size(LogicalSize::new(cell.w, cell.h));
+            // show() 放在最后, 确保 webview 在新尺寸/位置下可见
+            let _ = webview.show();
+
+            // 调试: 读取实际位置, 与请求值对比
+            if let Ok(pos) = webview.position() {
+                if let Ok(sz) = webview.size() {
+                    eprintln!(
+                        "[layout] {} requested=({:.1},{:.1} {:.1}x{:.1}) actual=({}, {}) {}x{}",
+                        cell.label, cell.x, cell.y, cell.w, cell.h,
+                        pos.x, pos.y, sz.width, sz.height
+                    );
+                }
+            }
         } else {
             let _ = webview.hide();
         }

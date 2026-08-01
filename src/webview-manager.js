@@ -50,23 +50,30 @@ export async function layoutWebviews(activeLabels) {
   const activeSet = new Set(activeLabels);
   const cells = [];
 
-  // 激活的 cell: 测量 cell-body 坐标
+  // 激活的 cell: 用 cell-body 顶部作为 webview 起点
   gridRegion.querySelectorAll(".cell").forEach((cell) => {
     const body = cell.querySelector(".cell-body");
     if (!body) return;
-    const rect = body.getBoundingClientRect();
+    const bodyRect = body.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
     // 飞入/飞出中的卡片: webview 保持隐藏 (transform 会干扰测量, 且动画期间不应显示)
     const hidden =
       cell.classList.contains("card-fly-in") ||
       cell.classList.contains("card-fly-out");
+    // macOS WKWebView 渲染向上溢出 frame 约 20-40px,
+    // 头部需留 32px 缓冲; 底部 -2px (略微溢出确保无空白); 两侧 2px
+    const TOP_GAP = 32;
+    const SIDE_GAP = 2;
+    const BOTTOM_OVERLAP = 22;
     cells.push({
       label: cell.dataset.label,
-      x: rect.left,
-      y: rect.top,
-      w: rect.width,
-      h: rect.height,
+      x: cellRect.left + SIDE_GAP,
+      y: bodyRect.top + TOP_GAP,
+      w: cellRect.width - SIDE_GAP * 2,
+      h: bodyRect.bottom - bodyRect.top - TOP_GAP + BOTTOM_OVERLAP,
       visible: !hidden,
     });
+    console.log(`[layout] ${cell.dataset.label} cell=(${cellRect.left},${cellRect.top} ${cellRect.width}x${cellRect.height}) body=(${bodyRect.left},${bodyRect.top} ${bodyRect.width}x${bodyRect.height}) webview=(${cellRect.left + SIDE_GAP},${bodyRect.top + TOP_GAP} ${cellRect.width - SIDE_GAP * 2}x${bodyRect.bottom - bodyRect.top - TOP_GAP + BOTTOM_OVERLAP})`);
   });
 
   // 未激活但已创建的 webview: 隐藏

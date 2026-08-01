@@ -7,6 +7,7 @@ html {
   background-color: #f0f2f5;
   overflow: hidden;
 }
+
 .container {
   display: flex;
   flex-direction: column;
@@ -16,6 +17,7 @@ html {
 /* ===== 网格区域: cell header 条 + 空白区 (child webviews 叠加) ===== */
 .grid-region {
   flex: 1;
+  min-height: 0;
   display: none;
   gap: 12px;
   padding: 12px;
@@ -69,6 +71,8 @@ html {
   color: #333;
   border-bottom: 1px solid #ccc;
   flex-shrink: 0;
+  position: relative;
+  z-index: 5;
 }
 .header-controls {
   display: flex;
@@ -77,6 +81,8 @@ html {
 }
 .cell-body {
   flex: 1;
+  background: #f8f9fa;
+  border-top: 1px solid #e8e8e8;
 }
 
 /* 最大化 */
@@ -156,6 +162,7 @@ html {
 /* ===== 控制面板 ===== */
 .control-panel {
   height: auto;
+  flex-shrink: 0;
   background: white;
   border-top: 1px solid #ccc;
   display: flex;
@@ -163,6 +170,7 @@ html {
   padding: 10px 20px;
   gap: 10px;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 .input-area {
   display: flex;
@@ -206,12 +214,15 @@ button.send-btn:active {
 }
 .model-selector {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 15px;
   font-size: 14px;
   color: #333;
   user-select: none;
   flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 .model-selector label {
   display: flex;

@@ -53,7 +53,11 @@ fn main() {
             let _ = std::fs::create_dir_all(&data_dir);
 
             // ===== 3. 前端 webview =====
-            if let Err(e) = window.add_child(
+            // 用窗口实际内尺寸创建 (auto_resize 在 macOS 上不可靠, 需显式同步)
+            let inner = window
+                .inner_size()
+                .unwrap_or(tauri::PhysicalSize::new(1400, 900));
+            match window.add_child(
                 tauri::webview::WebviewBuilder::new(
                     "frontend",
                     WebviewUrl::App("index.html".into()),
@@ -61,9 +65,18 @@ fn main() {
                 .auto_resize()
                 .data_directory(data_dir),
                 tauri::LogicalPosition::new(0.0, 0.0),
-                tauri::LogicalSize::new(1400.0, 900.0),
+                inner,
             ) {
-                eprintln!("Warning: Failed to create frontend webview: {}", e);
+                Ok(webview) => {
+                    // 监听窗口 resize, 同步前端 webview 尺寸
+                    let wv = webview.clone();
+                    window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::Resized(size) = event {
+                            let _ = wv.set_size(*size);
+                        }
+                    });
+                }
+                Err(e) => eprintln!("Warning: Failed to create frontend webview: {}", e),
             }
 
             Ok(())

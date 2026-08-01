@@ -282,16 +282,20 @@ function buildSendScript(site, text) {
         var sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
+        var inserted = false;
         if (${needsBeforeInput}) {
-          input.dispatchEvent(new InputEvent('beforeinput', {
+          // Slate.js / ProseMirror 等通过 beforeinput 接管输入, 会调用 preventDefault
+          var bi = new InputEvent('beforeinput', {
             bubbles: true, cancelable: true, inputType: 'insertText', data: text
-          }));
+          });
+          input.dispatchEvent(bi);
+          if (bi.defaultPrevented) {
+            // 编辑器已自行插入文本, 不再 execCommand (否则重复)
+            inserted = true;
+          }
         }
-        document.execCommand('insertText', false, text);
-        if (${needsBeforeInput}) {
-          input.dispatchEvent(new InputEvent('input', {
-            bubbles: true, inputType: 'insertText', data: text
-          }));
+        if (!inserted) {
+          document.execCommand('insertText', false, text);
         }
         input.dispatchEvent(new Event('change', { bubbles: true }));
       } else {
