@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-08-01
+
+### Fixed
+
+- **macOS 底部输入框被裁切**：`main.rs` 中 webview 不再硬编码 1400×900，改用 `window.inner_size()` 实际尺寸创建；并添加 `on_window_event(Resized)` 监听器，窗口缩放时显式同步 webview 尺寸（macOS WKWebView 的 `auto_resize` 在 Tauri 中不可靠）
+- **macOS 卡片头部按钮被 webview 遮挡**：`webview-manager.js` 改用 `cell-body` 边界测量 webview 起始位置，顶部留 32px 缓冲吸收 WKWebView 层-backed 渲染溢出；底部略微溢出 2px 确保无空白
+- **macOS webview 切换后内容不可见**：`commands.rs` 调整生命周期顺序，先 `set_position`/`set_size` 再 `show`，移除导致内容消失的 `set_focus()` 调用
+- **通义千问文本重复插入**：`main.js` 中 `beforeinput` 事件被 Slate.js 拦截后仍执行 `execCommand('insertText')` 导致二次插入。改为检查 `bi.defaultPrevented`，Slate 已接管时跳过 `execCommand`；移除多余的 `input` 事件派发
+
+### Changed
+
+- **webview 布局测量**：从依赖 `cell-body` 顶部改为同时使用 `cell-body` 的 `top`/`bottom` 边界，消除 flex 布局亚像素偏差
+- **cell-body 样式**：加 `#f8f9fa` 背景色与 `border-top` 分隔线，移除 `padding-top`
+
 ## [1.0.0] - 2026-07-31
 
 ### Added
